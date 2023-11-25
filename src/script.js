@@ -9,6 +9,10 @@ const scene = new THREE.Scene();
 const textureLoader = new THREE.TextureLoader();
 const particlesTexture = textureLoader.load("/textures/alphaSnow.jpg");
 
+scene.background = new THREE.CubeTextureLoader()
+	.setPath("textures/env/")
+	.load(["px.png", "nx.png", "py.png", "ny.png", "pz.png", "nz.png"]);
+
 // const geometry = new THREE.PlaneGeometry(1, 1);
 const geometry = new THREE.BufferGeometry();
 
@@ -49,7 +53,7 @@ const aspect = {
 const camera = new THREE.PerspectiveCamera(
 	75,
 	aspect.width / aspect.height,
-	0.001,
+	0.01,
 	1000
 );
 
@@ -69,16 +73,49 @@ renderer.setSize(aspect.width, aspect.height);
 
 const controls = new OrbitControls(camera, canvas);
 controls.enableDamping = true;
-controls.enableRotate = false;
-controls.enableZoom = false;
-controls.autoRotate = true;
-controls.autoRotateSpeed = 0.2;
+controls.enableRotate = true;
+// controls.enableZoom = false;
 
 const clock = new THREE.Clock();
+
+const gravity = new THREE.Vector3(0, -0.001, 0); // Adjust the Y component to control the falling speed
+const wind = new THREE.Vector3(0.002, 0, 0); // Optional wind effect, adjust as needed
+
+// Update point positions for snowfall
+
 const animate = () => {
+	// const elapsedTime = clock.getElapsedTime();
+
+	// points.rotation.y = elapsedTime * 0.05;
+
+	// controls.update();
+	// renderer.render(scene, camera);
+	// requestAnimationFrame(animate);
+
 	const elapsedTime = clock.getElapsedTime();
 
-	// points.rotation.z = elapsedTime * 0.05;
+	const data = geometry.attributes.position.array;
+
+	for (let i = 0; i < data.length; i += 3) {
+		data[i] += Math.random() * 0.0002;
+
+		data[i + 1] += gravity.y;
+
+		if (data[i] > 2) {
+			data[i] = -2;
+		}
+		if (data[i + 1] < -2) {
+			data[i + 1] = 2;
+		}
+	}
+
+	// Log the minimum Y-coordinate for debugging
+	// console.log("Min Y:", minY);
+
+	geometry.attributes.position.needsUpdate = true;
+	points.rotation.y = elapsedTime * 0.01;
+	points.rotation.z = elapsedTime * 0.01;
+	// points.rotation.x = elapsedTime * 0.01;
 
 	controls.update();
 	renderer.render(scene, camera);
